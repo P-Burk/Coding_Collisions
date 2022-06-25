@@ -1,3 +1,11 @@
+/*
+ * Class: CS-330-T5621 Computer Graphics and Visualization
+ * Instructor: Malcolm Wabara, M.S
+ * Assignment: 8-3 Assignment: Coding Collisions
+ * Student: Preston Burkhardt
+ * Date: 25 June 2022
+ */
+
 #include <GLFW\glfw3.h>
 #include "linmath.h"
 #include <stdlib.h>

@@ -31,8 +31,8 @@
 *.out
 *.app
 
-.vs\
-.Debug\
 *.vcxproj
 *.filters
 *.user
+/Debug
+/.vs/Coding_Collisions/v17
