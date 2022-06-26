@@ -33,7 +33,13 @@ public:
 	ONOFF onoff;
 
 	Brick(BRICKTYPE bt, float xx, float yy, float ww, float rr, float gg, float bb) {
-		brick_type = bt; x = xx; y = yy, width = ww; red = rr, green = gg, blue = bb;
+		brick_type = bt; 
+		x = xx; 
+		y = yy;
+		width = ww; 
+		red = rr;
+		green = gg;
+		blue = bb;
 		onoff = ON;
 	};
 
@@ -144,6 +150,7 @@ public:
 
 
 vector<Circle> world;
+vector<Brick> rowOfBricks1;
 
 
 int main(void) {
@@ -162,10 +169,24 @@ int main(void) {
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
-	Brick brick(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0);
-	Brick brick2(DESTRUCTABLE, -0.5, 0.33, 0.2, 0, 1, 0);
-	Brick brick3(DESTRUCTABLE, -0.5, -0.33, 0.2, 0, 1, 1);
-	Brick brick4(REFLECTIVE, 0, 0, 0.2, 1, 0.5, 0.5);
+	//add bricks to top row
+	float startX = -0.95;
+	while (startX <= 0.95) {
+		Brick newBrick(DESTRUCTABLE, startX, 0.85, 0.1, 0, 1, 0);
+		rowOfBricks1.push_back(newBrick);
+		startX += 0.11;
+	}
+
+	//Brick brick1(DESTRUCTABLE, -0.95, 0.85, 0.1, 0, 1, 0);
+	//Brick brick2(DESTRUCTABLE, -0.84, 0.85, 0.1, 0, 1, 0);
+	//Brick brick3(DESTRUCTABLE, -0.73, 0.85, 0.1, 0, 1, 0);
+	//Brick brick4(DESTRUCTABLE, -0.62, 0.85, 0.1, 0, 1, 0);
+	//Brick brick5(DESTRUCTABLE, -0.51, 0.85, 0.1, 0, 1, 0);
+	//Brick testBrick(DESTRUCTABLE, 0.95, 0.70, 0.1, 1, 1, 0);
+
+
+	Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0);
+	Brick brick51(REFLECTIVE, 0, 0, 0.2, 1, 0.5, 0.5);
 
 	while (!glfwWindowShouldClose(window)) {
 		//Setup View
@@ -180,19 +201,37 @@ int main(void) {
 
 		//Movement
 		for (int i = 0; i < world.size(); i++) {
-			world[i].CheckCollision(&brick);
-			world[i].CheckCollision(&brick2);
-			world[i].CheckCollision(&brick3);
-			world[i].CheckCollision(&brick4);
+			for (int j = 0; j < rowOfBricks1.size(); j++) {
+				world[i].CheckCollision(&rowOfBricks1[j]);
+			}
+
+
+			//world[i].CheckCollision(&brick1);
+			//world[i].CheckCollision(&brick2);
+			//world[i].CheckCollision(&brick3);
+			//world[i].CheckCollision(&brick4);
+			//world[i].CheckCollision(&brick5);
+
+			world[i].CheckCollision(&brick50);
+			world[i].CheckCollision(&brick51);
 			world[i].MoveOneStep();
 			world[i].DrawCircle();
 
 		}
 
-		brick.drawBrick();
-		brick2.drawBrick();
-		brick3.drawBrick();
-		brick4.drawBrick();
+		for (int k = 0; k < rowOfBricks1.size(); k++) {
+			rowOfBricks1[k].drawBrick();
+		}
+		//testBrick.drawBrick();
+
+		//brick1.drawBrick();
+		//brick2.drawBrick();
+		//brick3.drawBrick();
+		//brick4.drawBrick();
+		//brick5.drawBrick();
+
+		brick50.drawBrick();
+		brick51.drawBrick();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
