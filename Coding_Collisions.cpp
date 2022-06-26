@@ -7,6 +7,8 @@
  */
 
 #include <GLFW\glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 #include "linmath.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -66,6 +68,21 @@ public:
 	}
 };
 
+//enum class Direction {
+//	UP = 1,
+//	RIGHT,
+//	DOWN,
+//	LEFT,
+//	UP_RIGHT,
+//	UP_LEFT,
+//	DOWN_RIGHT,
+//	DOWN_LEFT
+//};
+
+glm::vec2 GetRandomDirection() {
+	auto x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	return { x, 1 };
+}
 
 class Circle {
 public:
@@ -74,9 +91,9 @@ public:
 	float x;
 	float y;
 	float speed = 0.01;
-	int direction; // 1=up 2=right 3=down 4=left 5 = up right   6 = up left  7 = down right  8= down left
+	glm::vec2 direction; // 1=up 2=right 3=down 4=left 5 = up right   6 = up left  7 = down right  8= down left
 
-	Circle(double xx, double yy, double rr, int dir, float rad, float r, float g, float b) {
+	Circle(double xx, double yy, double rr, glm::vec2 dir, float rad, float r, float g, float b) {
 		x = xx;
 		y = yy;
 		radius = rr;
@@ -87,70 +104,60 @@ public:
 		direction = dir;
 	}
 
-	void CheckCollision(Brick* brk) {
+	void brickCollision(Brick* brk) {
 		if (brk->brick_type == REFLECTIVE) {
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width)) {
-				direction = GetRandomDirection();
-				x = x + 0.03;
-				y = y + 0.04;
+				direction *= -1;
+				x = x + (direction.x * 0.03);
+				y = y + (direction.y * 0.04);
 			}
-		} 
-		else if (brk->brick_type == DESTRUCTABLE) {
+		} else if (brk->brick_type == DESTRUCTABLE) {
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount >= brk->lifeCount)) {
 				brk->onoff = OFF;
-			}
-			else if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount < brk->lifeCount)) {
+			} else if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount < brk->lifeCount)) {
 				++brk->hitCount;
 				brk->red = rand() % 2;
 				brk->green = rand() % 2;
 				brk->blue = rand() % 2;
-				direction = GetRandomDirection();
-				x = x + 0.03;
-				y = y + 0.04;
+				direction *= -1;
+				x = x + (direction.x * 0.03);
+				y = y + (direction.y * 0.04);
 			}
 		}
 	}
 
-	int GetRandomDirection() {
-		return (rand() % 8) + 1;
+	void circleCollision(Circle& otherCircle) {
+		auto circleDist = sqrt(std::pow(otherCircle.x - x, 2) + (std::pow(otherCircle.y - y, 2)));
+
+		if (circleDist < radius + otherCircle.radius) {
+			// COLLISION!
+			direction.y *= -1;
+			direction.x *= -1;
+
+
+			x += direction.x * (radius - (circleDist / 2));
+			y += direction.y * (radius - (circleDist / 2));
+
+			otherCircle.direction.x *= -1;
+			otherCircle.direction.y *= -1;
+
+			otherCircle.x += otherCircle.direction.x * (otherCircle.radius - (circleDist / 2));
+			otherCircle.y += otherCircle.direction.y * (otherCircle.radius - (circleDist / 2));
+		}
 	}
+
 
 	void MoveOneStep() {
-		if (direction == 1 || direction == 5 || direction == 6)  // up
-		{
-			if (y > -1 + radius) {
-				y -= speed;
-			} else {
-				direction = GetRandomDirection();
-			}
+		if (y < -1 + radius || y > 1 - radius) {
+			direction.y *= -1;
 		}
 
-		if (direction == 2 || direction == 5 || direction == 7)  // right
-		{
-			if (x < 1 - radius) {
-				x += speed;
-			} else {
-				direction = GetRandomDirection();
-			}
+		if (x < -1 + radius || x > 1 - radius) {
+			direction.x *= -1;
 		}
 
-		if (direction == 3 || direction == 7 || direction == 8)  // down
-		{
-			if (y < 1 - radius) {
-				y += speed;
-			} else {
-				direction = GetRandomDirection();
-			}
-		}
-
-		if (direction == 4 || direction == 6 || direction == 8)  // left
-		{
-			if (x > -1 + radius) {
-				x -= speed;
-			} else {
-				direction = GetRandomDirection();
-			}
-		}
+		x += direction.x * speed;
+		y += direction.y * speed;
 	}
 
 	void DrawCircle() {
@@ -162,6 +169,18 @@ public:
 		}
 		glEnd();
 	}
+
+private:
+	enum Direction {
+		UP = 1,
+		RIGHT,
+		DOWN,
+		LEFT,
+		UP_RIGHT,
+		UP_LEFT,
+		DOWN_RIGHT,
+		DOWN_LEFT
+	};
 };
 
 
@@ -223,12 +242,12 @@ int main(void) {
 		//Movement
 		for (int i = 0; i < world.size(); i++) {
 			for (int j = 0; j < rowOfBricks1.size(); j++) {
-				world[i].CheckCollision(&rowOfBricks1[j]);
+				world[i].brickCollision(&rowOfBricks1[j]);
 			}
 
 
-			world[i].CheckCollision(&brick50);
-			world[i].CheckCollision(&brick51);
+			world[i].brickCollision(&brick50);
+			world[i].brickCollision(&brick51);
 			world[i].MoveOneStep();
 			world[i].DrawCircle();
 
@@ -267,7 +286,7 @@ void genBall(GLFWwindow* window, int key, int scancode, int action, int mods) {
 		r = rand() / 10000;
 		g = rand() / 10000;
 		b = rand() / 10000;
-		Circle B(0, 0, 02, 2, 0.05, r, g, b);
+		Circle B(0, -0.75, 02, GetRandomDirection(), 0.05, r, g, b);
 		world.push_back(B);
 	}
 }
