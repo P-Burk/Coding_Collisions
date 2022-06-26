@@ -169,12 +169,21 @@ int main(void) {
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
-	//add bricks to top row
+	//add bricks to top rows
+	int numOfRows = 4;
 	float startX = -0.95;
-	while (startX <= 0.95) {
-		Brick newBrick(DESTRUCTABLE, startX, 0.85, 0.1, 0, 1, 0);
-		rowOfBricks1.push_back(newBrick);
-		startX += 0.11;
+	float startY = 0.85;
+	for (int i = 0; i < numOfRows; i++) {
+		int randR = rand() % 2;
+		int randG = rand() % 2;
+		int randB = rand() % 2;
+		while (startX <= 0.95) {
+			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB);
+			rowOfBricks1.push_back(newBrick);
+			startX += 0.11;
+		}
+		startX = -0.95;
+		startY -= 0.15;
 	}
 
 	//Brick brick1(DESTRUCTABLE, -0.95, 0.85, 0.1, 0, 1, 0);
