@@ -68,16 +68,6 @@ public:
 	}
 };
 
-//enum class Direction {
-//	UP = 1,
-//	RIGHT,
-//	DOWN,
-//	LEFT,
-//	UP_RIGHT,
-//	UP_LEFT,
-//	DOWN_RIGHT,
-//	DOWN_LEFT
-//};
 
 glm::vec2 GetRandomDirection() {
 	auto x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -92,6 +82,7 @@ public:
 	float y;
 	float speed = 0.01;
 	glm::vec2 direction; // 1=up 2=right 3=down 4=left 5 = up right   6 = up left  7 = down right  8= down left
+	bool deleted;
 
 	Circle(double xx, double yy, double rr, glm::vec2 dir, float rad, float r, float g, float b) {
 		x = xx;
@@ -102,16 +93,22 @@ public:
 		blue = b;
 		radius = rad;
 		direction = dir;
+		deleted = false;
 	}
 
+	//checks for collisions with bricks
 	void brickCollision(Brick* brk) {
+
+		//reflective bricks
 		if (brk->brick_type == REFLECTIVE) {
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width)) {
 				direction *= -1;
 				x = x + (direction.x * 0.03);
 				y = y + (direction.y * 0.04);
 			}
-		} else if (brk->brick_type == DESTRUCTABLE) {
+		} 
+		//destructable bricks
+		else if (brk->brick_type == DESTRUCTABLE) {
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount >= brk->lifeCount)) {
 				brk->onoff = OFF;
 			} else if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount < brk->lifeCount)) {
@@ -126,6 +123,7 @@ public:
 		}
 	}
 
+	//checks for circle collision
 	void circleCollision(Circle& otherCircle) {
 		auto circleDist = sqrt(std::pow(otherCircle.x - x, 2) + (std::pow(otherCircle.y - y, 2)));
 
@@ -146,6 +144,10 @@ public:
 		}
 	}
 
+	//void softDelete() {
+	//	this->radius = 0;
+	//	this->deleted = true;
+	//}
 
 	void MoveOneStep() {
 		if (y < -1 + radius || y > 1 - radius) {
@@ -189,6 +191,7 @@ vector<Brick> rowOfBricks1;
 
 void processInput(GLFWwindow* window, Brick& brick);
 void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
+int deleteCount = 0;
 
 
 int main(void) {
@@ -217,10 +220,10 @@ int main(void) {
 		int randB = rand() % 2;
 
 		//avoids setting the brick to invisible color
-		while (randR == 0 && randG == 0 && randB == 0) {
-			int randR = rand() % 2;
-			int randG = rand() % 2;
-			int randB = rand() % 2;
+		while ((randR == 0) && (randG == 0) && (randB == 0)) {
+			randR = rand() % 2;
+			randG = rand() % 2;
+			randB = rand() % 2;
 		}
 
 		while (startX <= 0.95) {
@@ -235,8 +238,6 @@ int main(void) {
 
 	//Brick testBrick(DESTRUCTABLE, 0.95, 0.70, 0.1, 1, 1, 0);
 
-
-	//Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0, 100);
 	Brick brick51(REFLECTIVE, 0, -0.9, 0.2, 1, 0.5, 0.5, 100);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -252,11 +253,35 @@ int main(void) {
 
 		//Movement
 		for (int i = 0; i < world.size(); i++) {
+			Circle &currCircle = world[i];
+
+			//check brick collision
 			for (int j = 0; j < rowOfBricks1.size(); j++) {
-				world[i].brickCollision(&rowOfBricks1[j]);
+				currCircle.brickCollision(&rowOfBricks1[j]);
 			}
 
-			//world[i].brickCollision(&brick50);
+			//check circle collision
+			if (i + 1 < world.size()) {
+				for (int l = i + 1; l < world.size(); l++) {
+					Circle& otherCircle = world[l];
+					currCircle.circleCollision(otherCircle);
+				}
+			}
+
+			//delete the circle
+			//if (currCircle.y - currCircle.radius <= -1.0) {
+			//	currCircle.deleted = true;
+			//	currCircle.radius = 0.0;
+			//	deleteCount++;
+			//	if (deleteCount == world.size()) {
+			//		cout << endl;
+			//		cout << "*** GAME OVER ***" << endl;
+			//		return 0;
+			//	}
+			//}
+
+
+
 			world[i].brickCollision(&brick51);
 			world[i].MoveOneStep();
 			world[i].DrawCircle();
@@ -269,7 +294,6 @@ int main(void) {
 
 		//testBrick.drawBrick();
 
-		//brick50.drawBrick();
 		brick51.drawBrick();
 
 		glfwSwapBuffers(window);
@@ -286,6 +310,8 @@ void processInput(GLFWwindow* window, Brick& brick) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	//refective brick movement
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		brick.x -= 0.01;
 	}
