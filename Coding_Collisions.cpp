@@ -34,6 +34,7 @@ public:
 	ONOFF onoff;
 	int hitCount = 0;
 	int lifeCount;
+	double halfside;
 
 	Brick(BRICKTYPE bt, float xx, float yy, float ww, float rr, float gg, float bb, int lifeCount) {
 		brick_type = bt; 
@@ -45,11 +46,12 @@ public:
 		blue = bb;
 		onoff = ON;
 		this->lifeCount = lifeCount;
+		halfside = width / 2;
 	};
 
 	void drawBrick() {
 		if (onoff == ON) {
-			double halfside = width / 2;
+			//double halfside = width / 2;
 
 			glColor3d(red, green, blue);
 			glBegin(GL_POLYGON);
@@ -94,13 +96,18 @@ public:
 			}
 		} 
 		else if (brk->brick_type == DESTRUCTABLE) {
-			++brk->hitCount;
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount >= brk->lifeCount)) {
 				brk->onoff = OFF;
 			}
-			//direction = GetRandomDirection();
-			//x = x + 0.03;
-			//y = y + 0.04;
+			else if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount < brk->lifeCount)) {
+				++brk->hitCount;
+				brk->red = rand() % 2;
+				brk->green = rand() % 2;
+				brk->blue = rand() % 2;
+				direction = GetRandomDirection();
+				x = x + 0.03;
+				y = y + 0.04;
+			}
 		}
 	}
 
@@ -187,7 +194,7 @@ int main(void) {
 		int randG = rand() % 2;
 		int randB = rand() % 2;
 		while (startX <= 0.95) {
-			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB, numOfRows);
+			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB, numOfRows - i);
 			rowOfBricks1.push_back(newBrick);
 			startX += 0.11;
 		}
