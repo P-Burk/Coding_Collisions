@@ -21,6 +21,7 @@ using namespace std;
 const float DEG2RAD = 3.14159 / 180;
 
 void processInput(GLFWwindow* window);
+void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 enum BRICKTYPE { REFLECTIVE, DESTRUCTABLE };
 enum ONOFF { ON, OFF };
@@ -31,8 +32,10 @@ public:
 	float x, y, width;
 	BRICKTYPE brick_type;
 	ONOFF onoff;
+	int hitCount = 0;
+	int lifeCount;
 
-	Brick(BRICKTYPE bt, float xx, float yy, float ww, float rr, float gg, float bb) {
+	Brick(BRICKTYPE bt, float xx, float yy, float ww, float rr, float gg, float bb, int lifeCount) {
 		brick_type = bt; 
 		x = xx; 
 		y = yy;
@@ -41,6 +44,7 @@ public:
 		green = gg;
 		blue = bb;
 		onoff = ON;
+		this->lifeCount = lifeCount;
 	};
 
 	void drawBrick() {
@@ -67,7 +71,7 @@ public:
 	float radius;
 	float x;
 	float y;
-	float speed = 0.03;
+	float speed = 0.01;
 	int direction; // 1=up 2=right 3=down 4=left 5 = up right   6 = up left  7 = down right  8= down left
 
 	Circle(double xx, double yy, double rr, int dir, float rad, float r, float g, float b) {
@@ -88,10 +92,15 @@ public:
 				x = x + 0.03;
 				y = y + 0.04;
 			}
-		} else if (brk->brick_type == DESTRUCTABLE) {
-			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width)) {
+		} 
+		else if (brk->brick_type == DESTRUCTABLE) {
+			++brk->hitCount;
+			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width) && (brk->hitCount >= brk->lifeCount)) {
 				brk->onoff = OFF;
 			}
+			//direction = GetRandomDirection();
+			//x = x + 0.03;
+			//y = y + 0.04;
 		}
 	}
 
@@ -178,7 +187,7 @@ int main(void) {
 		int randG = rand() % 2;
 		int randB = rand() % 2;
 		while (startX <= 0.95) {
-			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB);
+			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB, numOfRows);
 			rowOfBricks1.push_back(newBrick);
 			startX += 0.11;
 		}
@@ -186,16 +195,12 @@ int main(void) {
 		startY -= 0.15;
 	}
 
-	//Brick brick1(DESTRUCTABLE, -0.95, 0.85, 0.1, 0, 1, 0);
-	//Brick brick2(DESTRUCTABLE, -0.84, 0.85, 0.1, 0, 1, 0);
-	//Brick brick3(DESTRUCTABLE, -0.73, 0.85, 0.1, 0, 1, 0);
-	//Brick brick4(DESTRUCTABLE, -0.62, 0.85, 0.1, 0, 1, 0);
-	//Brick brick5(DESTRUCTABLE, -0.51, 0.85, 0.1, 0, 1, 0);
+
 	//Brick testBrick(DESTRUCTABLE, 0.95, 0.70, 0.1, 1, 1, 0);
 
 
-	Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0);
-	Brick brick51(REFLECTIVE, 0, 0, 0.2, 1, 0.5, 0.5);
+	Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0, 100);
+	Brick brick51(REFLECTIVE, 0, 0, 0.2, 1, 0.5, 0.5, 100);
 
 	while (!glfwWindowShouldClose(window)) {
 		//Setup View
@@ -215,12 +220,6 @@ int main(void) {
 			}
 
 
-			//world[i].CheckCollision(&brick1);
-			//world[i].CheckCollision(&brick2);
-			//world[i].CheckCollision(&brick3);
-			//world[i].CheckCollision(&brick4);
-			//world[i].CheckCollision(&brick5);
-
 			world[i].CheckCollision(&brick50);
 			world[i].CheckCollision(&brick51);
 			world[i].MoveOneStep();
@@ -231,13 +230,8 @@ int main(void) {
 		for (int k = 0; k < rowOfBricks1.size(); k++) {
 			rowOfBricks1[k].drawBrick();
 		}
-		//testBrick.drawBrick();
 
-		//brick1.drawBrick();
-		//brick2.drawBrick();
-		//brick3.drawBrick();
-		//brick4.drawBrick();
-		//brick5.drawBrick();
+		//testBrick.drawBrick();
 
 		brick50.drawBrick();
 		brick51.drawBrick();
@@ -256,7 +250,12 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+
+	glfwSetKeyCallback(window, genBall);
+}
+
+void genBall(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 		double r, g, b;
 		r = rand() / 10000;
 		g = rand() / 10000;
