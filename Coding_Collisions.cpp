@@ -22,8 +22,8 @@ using namespace std;
 
 const float DEG2RAD = 3.14159 / 180;
 
-void processInput(GLFWwindow* window);
-void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
+//void processInput(GLFWwindow* window, Brick &brick);
+//void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 enum BRICKTYPE { REFLECTIVE, DESTRUCTABLE };
 enum ONOFF { ON, OFF };
@@ -187,6 +187,9 @@ private:
 vector<Circle> world;
 vector<Brick> rowOfBricks1;
 
+void processInput(GLFWwindow* window, Brick& brick);
+void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
+
 
 int main(void) {
 	srand(time(NULL));
@@ -212,6 +215,14 @@ int main(void) {
 		int randR = rand() % 2;
 		int randG = rand() % 2;
 		int randB = rand() % 2;
+
+		//avoids setting the brick to invisible color
+		while (randR == 0 && randG == 0 && randB == 0) {
+			int randR = rand() % 2;
+			int randG = rand() % 2;
+			int randB = rand() % 2;
+		}
+
 		while (startX <= 0.95) {
 			Brick newBrick(DESTRUCTABLE, startX, startY, 0.1, randR, randG, randB, numOfRows - i);
 			rowOfBricks1.push_back(newBrick);
@@ -225,8 +236,8 @@ int main(void) {
 	//Brick testBrick(DESTRUCTABLE, 0.95, 0.70, 0.1, 1, 1, 0);
 
 
-	Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0, 100);
-	Brick brick51(REFLECTIVE, 0, 0, 0.2, 1, 0.5, 0.5, 100);
+	//Brick brick50(REFLECTIVE, 0.5, -0.33, 0.2, 1, 1, 0, 100);
+	Brick brick51(REFLECTIVE, 0, -0.9, 0.2, 1, 0.5, 0.5, 100);
 
 	while (!glfwWindowShouldClose(window)) {
 		//Setup View
@@ -237,7 +248,7 @@ int main(void) {
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		processInput(window);
+		processInput(window, brick51);
 
 		//Movement
 		for (int i = 0; i < world.size(); i++) {
@@ -245,8 +256,7 @@ int main(void) {
 				world[i].brickCollision(&rowOfBricks1[j]);
 			}
 
-
-			world[i].brickCollision(&brick50);
+			//world[i].brickCollision(&brick50);
 			world[i].brickCollision(&brick51);
 			world[i].MoveOneStep();
 			world[i].DrawCircle();
@@ -259,7 +269,7 @@ int main(void) {
 
 		//testBrick.drawBrick();
 
-		brick50.drawBrick();
+		//brick50.drawBrick();
 		brick51.drawBrick();
 
 		glfwSwapBuffers(window);
@@ -272,9 +282,16 @@ int main(void) {
 }
 
 
-void processInput(GLFWwindow* window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+void processInput(GLFWwindow* window, Brick& brick) {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		brick.x -= 0.01;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		brick.x += 0.01;
+	}
 
 
 	glfwSetKeyCallback(window, genBall);
@@ -286,7 +303,15 @@ void genBall(GLFWwindow* window, int key, int scancode, int action, int mods) {
 		r = rand() / 10000;
 		g = rand() / 10000;
 		b = rand() / 10000;
-		Circle B(0, -0.75, 02, GetRandomDirection(), 0.05, r, g, b);
+
+		//avoids setting the ball to invisible color
+		while (r == 0.0 && g == 0.0 && b == 0.0) {
+			r = rand() / 10000;
+			g = rand() / 10000;
+			b = rand() / 10000;
+		}
+
+		Circle B(0, -0.55, 02, GetRandomDirection(), 0.05, r, g, b);
 		world.push_back(B);
 	}
 }
