@@ -81,7 +81,7 @@ public:
 	float x;
 	float y;
 	float speed = 0.01;
-	glm::vec2 direction; // 1=up 2=right 3=down 4=left 5 = up right   6 = up left  7 = down right  8= down left
+	glm::vec2 direction;
 	bool deleted;
 
 	Circle(double xx, double yy, double rr, glm::vec2 dir, float rad, float r, float g, float b) {
@@ -147,6 +147,9 @@ public:
 
 			otherCircle.x += otherCircle.direction.x * (otherCircle.radius - (circleDist / 2));
 			otherCircle.y += otherCircle.direction.y * (otherCircle.radius - (circleDist / 2));
+
+			this->radius = this->radius / 2;
+			otherCircle.radius = otherCircle.radius / 2;
 		}
 	}
 
@@ -172,18 +175,6 @@ public:
 		}
 		glEnd();
 	}
-
-private:
-	enum Direction {
-		UP = 1,
-		RIGHT,
-		DOWN,
-		LEFT,
-		UP_RIGHT,
-		UP_LEFT,
-		DOWN_RIGHT,
-		DOWN_LEFT
-	};
 };
 
 
@@ -201,7 +192,9 @@ int main(void) {
 	cout << "   Bounce the ball into the blocks along the top of the screen while not letting it hit the bottom of the screen." << endl;
 	cout << "   Blocks in different rows have varying amounts of hit points." << endl;
 	cout << "   Deplete a block's hit points by hitting it with the ball." << endl;
-	cout << "   You have 5 lives and the balls' speed gets progressively faster." << endl << endl;
+	cout << "   If two or more balls collide, their radius is halved." << endl;
+	cout << "   The balls' speed increases as they are reflected with the bottom block." << endl;
+	cout << "   You have 5 lives to complete the goal." << endl << endl;
 
 	cout << "CONTROLS: " << endl;
 	cout << "   MOVEMENT - " << endl;
