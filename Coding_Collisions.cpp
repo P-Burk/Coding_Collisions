@@ -154,7 +154,7 @@ public:
 	}
 
 	void MoveOneStep() {
-		if (y < -1 + this->radius || y > 1 - this->radius) {
+		if (this->y < -1 + this->radius || this->y > 1 - this->radius) {
 			direction.y *= -1;
 		}
 
