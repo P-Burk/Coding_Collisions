@@ -103,8 +103,9 @@ public:
 		if (brk->brick_type == REFLECTIVE) {
 			if ((x > brk->x - brk->width && x <= brk->x + brk->width) && (y > brk->y - brk->width && y <= brk->y + brk->width)) {
 				direction *= -1;
-				x = x + (direction.x * 0.03);
-				y = y + (direction.y * 0.04);
+				this->x = this->x + (direction.x * 0.03);
+				this->y = this->y + (direction.y * 0.04);
+				this->speed += 0.001;
 			}
 		} 
 		//destructable bricks
@@ -116,25 +117,30 @@ public:
 				brk->red = rand() % 2;
 				brk->green = rand() % 2;
 				brk->blue = rand() % 2;
+				while ((brk->red == 0) && (brk->green == 0) && (brk->blue == 0)) {
+					brk->red = rand() % 2;
+					brk->green = rand() % 2;
+					brk->blue = rand() % 2;
+				}
 				direction *= -1;
-				x = x + (direction.x * 0.03);
-				y = y + (direction.y * 0.04);
+				this->x = this->x + (direction.x * 0.03);
+				this->y = this->y + (direction.y * 0.04);
 			}
 		}
 	}
 
 	//checks for circle collision
 	void circleCollision(Circle& otherCircle) {
-		auto circleDist = sqrt(std::pow(otherCircle.x - x, 2) + (std::pow(otherCircle.y - y, 2)));
+		auto circleDist = sqrt(std::pow(otherCircle.x - this->x, 2) + (std::pow(otherCircle.y - this->y, 2)));
 
-		if (circleDist < radius + otherCircle.radius) {
+		if (circleDist < this->radius + otherCircle.radius) {
 			// COLLISION!
 			direction.y *= -1;
 			direction.x *= -1;
 
 
-			x += direction.x * (radius - (circleDist / 2));
-			y += direction.y * (radius - (circleDist / 2));
+			this->x += direction.x * (this->radius - (circleDist / 2));
+			this->y += direction.y * (this->radius - (circleDist / 2));
 
 			otherCircle.direction.x *= -1;
 			otherCircle.direction.y *= -1;
@@ -144,22 +150,17 @@ public:
 		}
 	}
 
-	//void softDelete() {
-	//	this->radius = 0;
-	//	this->deleted = true;
-	//}
-
 	void MoveOneStep() {
-		if (y < -1 + radius || y > 1 - radius) {
+		if (y < -1 + this->radius || y > 1 - this->radius) {
 			direction.y *= -1;
 		}
 
-		if (x < -1 + radius || x > 1 - radius) {
+		if (this->x < -1 + this->radius || this->x > 1 - this->radius) {
 			direction.x *= -1;
 		}
 
-		x += direction.x * speed;
-		y += direction.y * speed;
+		this->x += direction.x * speed;
+		this->y += direction.y * speed;
 	}
 
 	void DrawCircle() {
@@ -167,7 +168,7 @@ public:
 		glBegin(GL_POLYGON);
 		for (int i = 0; i < 360; i++) {
 			float degInRad = i * DEG2RAD;
-			glVertex2f((cos(degInRad) * radius) + x, (sin(degInRad) * radius) + y);
+			glVertex2f((cos(degInRad) * this->radius) + this->x, (sin(degInRad) * this->radius) + this->y);
 		}
 		glEnd();
 	}
@@ -191,10 +192,27 @@ vector<Brick> rowOfBricks1;
 
 void processInput(GLFWwindow* window, Brick& brick);
 void genBall(GLFWwindow* window, int key, int scancode, int action, int mods);
-int deleteCount = 0;
+int lifeCount = 5;
 
 
 int main(void) {
+
+	cout << "GOAL: " << endl;
+	cout << "   Bounce the ball into the blocks along the top of the screen while not letting it hit the bottom of the screen." << endl;
+	cout << "   Blocks in different rows have varying amounts of hit points." << endl;
+	cout << "   Deplete a block's hit points by hitting it with the ball." << endl;
+	cout << "   You have 5 lives and the balls' speed gets progressively faster." << endl << endl;
+
+	cout << "CONTROLS: " << endl;
+	cout << "   MOVEMENT - " << endl;
+	cout << "      A - Left" << endl;
+	cout << "      D - Right" << endl << endl;
+
+	cout << "   BALL - " << endl;
+	cout << "      SPACE BAR - Generate one ball" << endl << endl;
+
+	cout << "*******************************************" << endl << endl;
+
 	srand(time(NULL));
 
 	if (!glfwInit()) {
@@ -268,24 +286,19 @@ int main(void) {
 				}
 			}
 
-			//delete the circle
-			//if (currCircle.y - currCircle.radius <= -1.0) {
-			//	currCircle.deleted = true;
-			//	currCircle.radius = 0.0;
-			//	deleteCount++;
-			//	if (deleteCount == world.size()) {
-			//		cout << endl;
-			//		cout << "*** GAME OVER ***" << endl;
-			//		return 0;
-			//	}
-			//}
-
-
+			//count a miss
+			if (currCircle.y - currCircle.radius <= -1.0) {
+				lifeCount--;
+				if (lifeCount < 0) {
+					cout << endl << "*** GAME OVER ***" << endl;
+					return 1;
+				}
+				cout << "Lives Remaining: " << lifeCount << endl;
+			}
 
 			world[i].brickCollision(&brick51);
 			world[i].MoveOneStep();
 			world[i].DrawCircle();
-
 		}
 
 		for (int k = 0; k < rowOfBricks1.size(); k++) {
